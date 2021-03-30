@@ -7,6 +7,11 @@ import { basename } from 'path';
 import { DlMSGraphClient } from './app/msgraph';
 import { msalConfig } from './environments/piggles';
 
+// Demo Constants
+const sharePointHost = 'sample.sharepoint.com';
+const sharePointSiteAddress = '/sites/SampleSharePoint';
+const listName = 'SimpleList';
+const uploadFile = './temp/SmallDocument.docx';
 
 function main() {
     const prompt = [
@@ -56,8 +61,6 @@ main();
 async function sharePointInfo() {
     try {
         const graph = new DlMSGraphClient(msalConfig);
-        const sharePointHost = 'piggles.sharepoint.com';
-        const sharePointSiteAddress = '/sites/PigglesSharePoint';
         const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
         const getSiteId: any = await graph.get(sharePointUrl);
         console.log(getSiteId);
@@ -72,8 +75,6 @@ async function sharePointInfo() {
 async function sharePointList() {
     try {
         const graph = new DlMSGraphClient(msalConfig);
-        const sharePointHost = 'piggles.sharepoint.com';
-        const sharePointSiteAddress = '/sites/PigglesSharePoint';
         const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
         const getSiteId: any = await graph.get(sharePointUrl);
 
@@ -81,7 +82,6 @@ async function sharePointList() {
         const getListsUrl = `/sites/${getSiteId.id}/lists`;
         const getListsFromSite = await graph.get(getListsUrl);
         const lists = (<any>getListsFromSite).value;
-        const listName = 'SimpleList';
 
         for (let l = 0; l < lists.length; l++) {
             const list = lists[l];
@@ -99,8 +99,6 @@ async function sharePointList() {
 async function addItemToList() {
     try {
         const graph = new DlMSGraphClient(msalConfig);
-        const sharePointHost = 'piggles.sharepoint.com';
-        const sharePointSiteAddress = '/sites/PigglesSharePoint';
         const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
         const getSiteId: any = await graph.get(sharePointUrl);
 
@@ -108,7 +106,6 @@ async function addItemToList() {
         const getListsUrl = `/sites/${getSiteId.id}/lists`;
         const getListsFromSite = await graph.get(getListsUrl);
         const lists = (<any>getListsFromSite).value;
-        const listName = 'SimpleList';
 
         // Get List Id
         let listId;
@@ -129,10 +126,7 @@ async function addItemToList() {
         };
         const addListItemURL = `${getListsUrl}/${listId}/items`;
         const addListItem = await graph.post(addListItemURL, listItem);
-
         console.log(addListItem);
-
-
 
     } catch (error) {
         console.error('addItemToList: An error occured');
@@ -143,8 +137,6 @@ async function addItemToList() {
 async function createFolder() {
     try {
         const graph = new DlMSGraphClient(msalConfig);
-        const sharePointHost = 'piggles.sharepoint.com';
-        const sharePointSiteAddress = '/sites/PigglesSharePoint';
         const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
         const getSiteId: any = await graph.get(sharePointUrl);
 
@@ -171,13 +163,10 @@ async function createDocument() {
         const graph = new DlMSGraphClient(msalConfig);
 
         // File Information
-        const uploadFile = './temp/EEDRMS.zip';
         const fileName = basename(uploadFile);
         const fSize = statSync(uploadFile);
 
         // Get SharePoint Information
-        const sharePointHost = 'piggles.sharepoint.com';
-        const sharePointSiteAddress = '/sites/PigglesSharePoint';
         const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
         const getSiteId: any = await graph.get(sharePointUrl);
 
