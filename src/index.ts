@@ -5,7 +5,7 @@ import { basename } from 'path';
 
 // Project Imports 
 import { DlMSGraphClient } from './app/msgraph';
-import { msalConfig } from './environments/piggles';
+import { msalConfig } from '../test/config';
 
 // Demo Constants
 const sharePointHost = 'sample.sharepoint.com';

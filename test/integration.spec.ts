@@ -1,4 +1,4 @@
-import { msalConfig } from '../src/environments/piggles';
+import { msalConfig } from '../test/config';
 import { DlMSGraphClient } from '../src/app/msgraph';
 import { expect } from 'chai';
 
