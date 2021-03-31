@@ -11,8 +11,8 @@ https://medium.com/@mbarben/sharepoint-on-the-graph-e813e838f604
 
  * You will need to setup Azure AD Application first, that will give you the `clientId` `clientSecret` `tenentid` values
  * Clone the report `git clone https://github.com/anvilation/sharepoint-graph` 
- * Copy `/test/test.config.ts` to `/test/config.ts` and update the corresponding values
  * browse to the folder and install modules `npm install`
+ * Copy `/test/test.config.ts` to `/test/config.ts` and update the corresponding values
  * Update the `/src/index.ts` file and update the following constants:
     - `sharePointHost` the host name for your tenant
     - `sharePointSiteAddress` the relative location of your SharePoint Site
