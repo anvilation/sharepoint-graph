@@ -28,9 +28,11 @@
   },
   "dependencies": {
     "@azure/msal-node": "^1.0.1",
+    "@driverlane/sharepoint-msgraph-wrapper": "^0.0.0",
     "@microsoft/microsoft-graph-client": "^2.2.1",
     "inquirer": "^8.0.0",
     "isomorphic-fetch": "^3.0.0",
+    "npm": "^7.8.0",
     "uuid": "^8.3.2"
   }
 }

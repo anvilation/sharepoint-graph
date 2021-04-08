@@ -3,13 +3,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { readFile, statSync } from 'fs';
 import { basename } from 'path';
 
+import { DLMSGraphClient, DLMSALConfig } from '@driverlane/sharepoint-msgraph-wrapper';
+
 // Project Imports 
-import { DlMSGraphClient } from './app/msgraph';
+// import { DlMSGraphClient } from './app/msgraph';
 import { msalConfig } from '../test/config';
 
 // Demo Constants
-const sharePointHost = 'sample.sharepoint.com';
-const sharePointSiteAddress = '/sites/SampleSharePoint';
+const sharePointHost = 'piggles.sharepoint.com';
+const sharePointSiteAddress = '/sites/PigglesSharePoint';
 const listName = 'SimpleList';
 const uploadFile = './temp/SmallDocument.docx';
 
@@ -60,9 +62,9 @@ main();
 // SharePoint Operations
 async function sharePointInfo() {
     try {
-        const graph = new DlMSGraphClient(msalConfig);
+        const graph = new DLMSGraphClient(msalConfig);
         const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
-        const getSiteId: any = await graph.get(sharePointUrl);
+        const getSiteId: any = await graph.request('GET', sharePointUrl);
         console.log(getSiteId);
 
     } catch (error) {
@@ -74,13 +76,13 @@ async function sharePointInfo() {
 
 async function sharePointList() {
     try {
-        const graph = new DlMSGraphClient(msalConfig);
+        const graph = new DLMSGraphClient(msalConfig);
         const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
-        const getSiteId: any = await graph.get(sharePointUrl);
+        const getSiteId: any = await graph.request('GET', sharePointUrl);
 
         // Get List Information
         const getListsUrl = `/sites/${getSiteId.id}/lists`;
-        const getListsFromSite = await graph.get(getListsUrl);
+        const getListsFromSite = await graph.request('GET', getListsUrl);
         const lists = (<any>getListsFromSite).value;
 
         for (let l = 0; l < lists.length; l++) {
@@ -98,35 +100,18 @@ async function sharePointList() {
 
 async function addItemToList() {
     try {
-        const graph = new DlMSGraphClient(msalConfig);
-        const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
-        const getSiteId: any = await graph.get(sharePointUrl);
-
-        // Get List Information
-        const getListsUrl = `/sites/${getSiteId.id}/lists`;
-        const getListsFromSite = await graph.get(getListsUrl);
-        const lists = (<any>getListsFromSite).value;
-
-        // Get List Id
-        let listId;
-        for (let l = 0; l < lists.length; l++) {
-            const list = lists[l];
-            if (list.displayName === listName) {
-                listId = list.id
-            }
-        }
-
-
-        // Create Body
+        const graph = new DLMSGraphClient(msalConfig);
+        graph.sp_setSharePointSettings(sharePointHost, sharePointSiteAddress, '');
         const listItem = {
             fields: {
                 Title: 'SharePoint using Graph',
                 Value: uuidv4()
             }
         };
-        const addListItemURL = `${getListsUrl}/${listId}/items`;
-        const addListItem = await graph.post(addListItemURL, listItem);
+
+        const addListItem = await graph.sp_addItemToList('listName', listItem);
         console.log(addListItem);
+
 
     } catch (error) {
         console.error('addItemToList: An error occured');
@@ -136,21 +121,10 @@ async function addItemToList() {
 
 async function createFolder() {
     try {
-        const graph = new DlMSGraphClient(msalConfig);
-        const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
-        const getSiteId: any = await graph.get(sharePointUrl);
-
-        // Create Folder
-        const libraryUrl = `/sites/${getSiteId.id}/drive/root/children`
-        const foldername = {
-            "name": uuidv4(),
-            "folder": {}
-        };
-
-        const newFolder = await graph.post(libraryUrl, foldername);
-        console.log(newFolder);
-
-
+        const graph = new DLMSGraphClient(msalConfig);
+        graph.sp_setSharePointSettings(sharePointHost, sharePointSiteAddress, 'Documents');
+        const newfolder = await graph.sp_createFolder('', uuidv4(), 'fail');
+        console.log(newfolder);
     } catch (error) {
         console.error('createFolder: An error occured');
         console.error(error);
@@ -160,46 +134,31 @@ async function createFolder() {
 async function createDocument() {
     try {
         // Graph Client
-        const graph = new DlMSGraphClient(msalConfig);
+        const graph = new DLMSGraphClient(msalConfig);
+        graph.sp_setSharePointSettings(sharePointHost, sharePointSiteAddress, 'Documents');
 
         // File Information
         const fileName = basename(uploadFile);
         const fSize = statSync(uploadFile);
 
-        // Get SharePoint Information
-        const sharePointUrl = `/sites/${sharePointHost}:${sharePointSiteAddress}`;
-        const getSiteId: any = await graph.get(sharePointUrl);
-
-        // Create Folder
-        const getRootIdUrl = `/sites/${getSiteId.id}/drive/root/`
-        const getRootId: any = await graph.get(getRootIdUrl);
-
         if ((fSize.size / (1024 * 1024)) < 4.096) {
             console.log('Small File Upload');
-
-            // Use Upload Small File Method
-            const smallUploadUrl = `/sites/${getSiteId.id}/drive/items/${getRootId.id}:/${fileName}:/content`
-
             readFile(uploadFile, 'utf8', async (err, data) => {
                 if (err) {
                     console.error('Error Reading File');
                     console.error(err);
 
                 } else {
-                    const smallFileUpload = await graph.put(smallUploadUrl, data);
+                    const smallFileUpload = await graph.sp_createSmallFile('', fileName, data);
                     console.log(smallFileUpload);
                 }
             });
         } else {
             console.log('Large File Upload');
-            // Use Upload Large File Method
-            // based upon https://docs.microsoft.com/en-us/graph/api/driveitem-createuploadsession?view=graph-rest-1.0
-            // Create a upload Session
-            const largeFileUploadSessionUrl = `/sites/${getSiteId.id}/drive/items/${getRootId.id}:/${fileName}:/createUploadSession`
-
-            const largeFile = graph.pathToFile(uploadFile, fileName);
-            const largeFileUpload = await graph.addLargeFile(largeFileUploadSessionUrl, fileName, fSize.size, largeFile);
-            console.log(largeFileUpload);
+            const largeFileUploadSessionUrl = await graph.sp_generateSessionUrl('', fileName);
+            const largeFile = graph.helper_pathToFile(uploadFile, fileName);
+            const uploadLargeFile = graph.sp_addLargeFile(largeFileUploadSessionUrl, fileName, fSize.size, 'fail', largeFile);
+            console.log(uploadLargeFile)
         }
     } catch (error) {
         console.error('createDocument: An error occured');
