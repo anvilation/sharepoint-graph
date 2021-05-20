@@ -8,11 +8,19 @@ import { DlMSGraphClient } from './app/msgraph';
 import { msalConfig } from '../test/config';
 
 // Demo Constants
+/*
 const sharePointHost = 'sample.sharepoint.com';
 const sharePointSiteAddress = '/sites/SampleSharePoint';
 const listName = 'SimpleList';
 const uploadFile = './temp/SmallDocument.docx';
 
+
+*/
+
+const sharePointHost = 'piggles.sharepoint.com';
+const sharePointSiteAddress = '/sites/PigglesSharePoint';
+const listName = 'SimpleList';
+const uploadFile = './temp/LargeDocument.docx';
 function main() {
     const prompt = [
         {
@@ -198,7 +206,7 @@ async function createDocument() {
             const largeFileUploadSessionUrl = `/sites/${getSiteId.id}/drive/items/${getRootId.id}:/${fileName}:/createUploadSession`
 
             const largeFile = graph.pathToFile(uploadFile, fileName);
-            const largeFileUpload = await graph.addLargeFile(largeFileUploadSessionUrl, fileName, fSize.size, largeFile);
+            const largeFileUpload = await graph.addLargeFile(uploadFile, largeFileUploadSessionUrl, fileName);
             console.log(largeFileUpload);
         }
     } catch (error) {

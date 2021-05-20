@@ -1,7 +1,7 @@
 import "isomorphic-fetch";
 import * as msal from "@azure/msal-node";
-import { AuthenticationProvider, Client, ClientOptions, LargeFileUploadTask, FileObject } from "@microsoft/microsoft-graph-client";
-import { statSync, readFileSync } from 'fs';
+import { AuthenticationProvider, Client, ClientOptions, LargeFileUploadTask, FileObject, StreamUpload } from "@microsoft/microsoft-graph-client";
+import { statSync, readFileSync, createReadStream } from 'fs';
 
 export class DLAuthenticationProvider implements AuthenticationProvider {
     config: MsalConfig = {
@@ -102,7 +102,7 @@ export class DlMSGraphClient {
         }
     }
 
-    async addLargeFile(url: string, filename: string, filesize: number, file: File) {
+    async addLargeFile(filepath: string, url: string, filename: string) {
         try {
             const payload = {
                 item: {
@@ -110,14 +110,14 @@ export class DlMSGraphClient {
                     name: filename,
                 },
             };
-            const fileObject: FileObject = {
-                size: filesize,
-                content: file,
-                name: filename
-            };
+            const stats = statSync(filepath);
+            const totalsize = stats.size;
+            const readStream = createReadStream(filepath);
+            const fileObject = new StreamUpload(readStream, filename, totalsize);
+
 
             const uploadSession = await LargeFileUploadTask.createUploadSession(this.client, url, payload);
-            const uploadTask = await new LargeFileUploadTask(this.client, fileObject, uploadSession);
+            const uploadTask = new LargeFileUploadTask(this.client, fileObject, uploadSession);
             const response = await uploadTask.upload();
             return response;
 
